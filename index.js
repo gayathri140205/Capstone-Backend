@@ -5,7 +5,7 @@ import AppRoutes from './src/routes/index.js';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 4001; // Use the PORT environment variable if set, otherwise default to 4001
+const PORT = process.env.PORT || 10000; // Use the PORT environment variable if set, otherwise default to 10000
 
 const app = express();
 
@@ -14,4 +14,3 @@ app.use(express.json());
 app.use('/', AppRoutes);
 
 app.listen(PORT, '0.0.0.0', () => console.log(`App is listening on port ${PORT}`)); // Bind host to '0.0.0.0'
-
