@@ -13,4 +13,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/', AppRoutes);
 
-app.listen(PORT, '0.0.0.0', () => console.log(`App is listening on port ${PORT}`)); // Bind host to '0.0.0.0'
+
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
