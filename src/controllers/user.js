@@ -1,7 +1,7 @@
 
 
 import userModel from '../models/user.js'
-import auth from '../common/auth.js'
+ import auth from '../common/auth.js'
 
 const create = async (req, res) => {
     try {
