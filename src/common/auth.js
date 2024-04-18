@@ -1,5 +1,7 @@
+// common/auth.js
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import userModel from '../models/user.js';
 
 const hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(Number(process.env.SALT_ROUNDS));
@@ -23,40 +25,38 @@ const decodeToken = async (token) => {
   return payload;
 };
 
-const validate = async (req, res, next) => {
+// Middleware to validate JWT token
+export const validate = (req, res, next) => {
+  const token = req.headers.authorization;
+  if (!token) {
+    return res.status(401).json({ message: 'Authorization header is missing' });
+  }
+
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) throw new Error('No Token Found');
-
-    const payload = await decodeToken(token);
-    req.headers.userId = payload.id;
-
-    const currentTime = Math.floor(Date.now() / 1000);
-    if (currentTime < payload.exp) {
-      next();
-    } else {
-      throw new Error('Token Expired');
-    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Attach user object to the request for further use
+    next();
   } catch (error) {
-    res.status(401).send({ message: error.message });
+    return res.status(401).json({ message: 'Invalid token' });
   }
 };
-const adminGuard = async (req, res, next) => {
-    try {
-      const token = req.headers.authorization?.split(" ")[1];
-      if (!token) throw new Error('No Token Found');
-  
-      const payload = await decodeToken(token);
-      next();
-    } catch (error) {
-      res.status(401).send({ message: error.message });
-    }
-  };
-  
-export default{
-    hashPassword,
-    hashCompare,
-    createToken,
-    validate,
-    adminGuard
-}
+
+// Middleware to check if user is admin
+export const adminGuard = (req, res, next) => {
+  const user = req.user; // User object attached from validate middleware
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access forbidden. Admin privileges required' });
+  }
+  next();
+};
+
+
+
+export default {
+  hashPassword,
+  createToken,
+  hashCompare,
+  decodeToken,
+  validate,
+  adminGuard,
+};

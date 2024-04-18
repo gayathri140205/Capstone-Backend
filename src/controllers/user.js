@@ -1,25 +1,29 @@
-// controllers/user.js
+import auth from '../common/auth.js'; // Importing the auth module
+
 import userModel from '../models/user.js';
-import auth from '../common/auth.js';
 
 const create = async (req, res) => {
   try {
-    const existingUser = await userModel.findOne({ email: req.body.email });
-    if (existingUser) {
-      return res.status(400).json({ message: `User with email ${req.body.email} already exists` });
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
-    const hashedPassword = await auth.hashPassword(req.body.password);
-    await userModel.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: hashedPassword,
-    });
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
 
-    res.status(201).send({ message: "User created successfully" });
+    const hashedPassword = await auth.hashPassword(password); // Correct usage of hashPassword from auth module
+
+    const newUser = new userModel({ name, email, password: hashedPassword });
+    await newUser.save();
+
+    res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
-    console.error("Error creating user:", error);
-    res.status(500).send({ message: "Internal Server error", error: error.message });
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Internal Server error' });
   }
 };
 
@@ -36,6 +40,7 @@ const login = async (req, res) => {
       return res.status(400).json({ message: `Invalid Password` });
     }
 
+    // Reusing the token generated during sign-up
     const token = await auth.createToken({
       id: user._id,
       name: user.name,
@@ -56,6 +61,8 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+
 
 const registerUser = async (req, res) => {
   const { name, email, mobile, add, status, role, desc, password } = req.body;
