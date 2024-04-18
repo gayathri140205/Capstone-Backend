@@ -1,10 +1,11 @@
+// routes/task.js
 import express from 'express';
 import taskController from '../controllers/task.js';
 import auth from '../common/auth.js';
 
 const router = express.Router();
 
-router.post('/create', auth.validate, taskController.createTask);
+router.post('/create', auth.validate, auth.adminGuard, taskController.createTask);
 router.put('/submit/:taskId', auth.validate, taskController.submitTask);
 router.get('/taskID/:taskId', auth.validate, taskController.getTaskbyTaskId);
 router.get('/user', auth.validate, taskController.getTaskById);
